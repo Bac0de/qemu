@@ -3509,12 +3509,12 @@ static const TypeInfo spapr_machine_info = {
     },
 };
 
-#define DEFINE_SPAPR_MACHINE(suffix, verstr, latest)                 \
+#define DEFINE_SPAPR_MACHINE_NAMED(qemuver, suffix, verstr, latest)  \
     static void spapr_machine_##suffix##_class_init(ObjectClass *oc, \
                                                     void *data)      \
     {                                                                \
         MachineClass *mc = MACHINE_CLASS(oc);                        \
-        spapr_machine_##suffix##_class_options(mc);                  \
+        spapr_machine_##qemuver##_class_options(mc);                 \
         if (latest) {                                                \
             mc->alias = "pseries";                                   \
             mc->is_default = 1;                                      \
@@ -3523,7 +3523,7 @@ static const TypeInfo spapr_machine_info = {
     static void spapr_machine_##suffix##_instance_init(Object *obj)  \
     {                                                                \
         MachineState *machine = MACHINE(obj);                        \
-        spapr_machine_##suffix##_instance_options(machine);          \
+        spapr_machine_##qemuver##_instance_options(machine);         \
     }                                                                \
     static const TypeInfo spapr_machine_##suffix##_info = {          \
         .name = MACHINE_TYPE_NAME("pseries-" verstr),                \
@@ -3537,6 +3537,9 @@ static const TypeInfo spapr_machine_info = {
     }                                                                \
     type_init(spapr_machine_register_##suffix)
 
+#define DEFINE_SPAPR_MACHINE(suffix, verstr, latest)                 \
+    DEFINE_SPAPR_MACHINE_NAMED(suffix, suffix, verstr, latest)
+
 /*
  * pseries-2.10
  */
@@ -3549,7 +3552,7 @@ static void spapr_machine_2_10_class_options(MachineClass *mc)
     /* Defaults for the latest behaviour inherited from the base class */
 }
 
-DEFINE_SPAPR_MACHINE(2_10, "2.10", true);
+DEFINE_SPAPR_MACHINE(2_10, "2.10", false);
 
 /*
  * pseries-2.9
@@ -3704,12 +3707,7 @@ DEFINE_SPAPR_MACHINE(2_7, "2.7", false);
  * pseries-2.6
  */
 #define SPAPR_COMPAT_2_6 \
-    HW_COMPAT_2_6 \
-    { \
-        .driver   = TYPE_SPAPR_PCI_HOST_BRIDGE,\
-        .property = "ddw",\
-        .value    = stringify(off),\
-    },
+    HW_COMPAT_2_6
 
 static void spapr_machine_2_6_instance_options(MachineState *machine)
 {
@@ -3728,12 +3726,21 @@ DEFINE_SPAPR_MACHINE(2_6, "2.6", false);
 /*
  * pseries-2.5
  */
+/*
+ * ddw was backported to 2.6 (Yakkety), so we have to disable it in <=2.5
+ * can be dropped when dropping Yakkety machine type (18.10)
+ */
 #define SPAPR_COMPAT_2_5 \
     HW_COMPAT_2_5 \
     { \
         .driver   = "spapr-vlan", \
         .property = "use-rx-buffer-pools", \
         .value    = "off", \
+    }, \
+    { \
+        .driver   = TYPE_SPAPR_PCI_HOST_BRIDGE,\
+        .property = "ddw",\
+        .value    = stringify(off),\
     },
 
 static void spapr_machine_2_5_instance_options(MachineState *machine)
@@ -3839,6 +3846,12 @@ static void spapr_machine_2_1_class_options(MachineClass *mc)
     SET_MACHINE_COMPAT(mc, SPAPR_COMPAT_2_1);
 }
 DEFINE_SPAPR_MACHINE(2_1, "2.1", false);
+
+/* Ubuntu machine types */
+DEFINE_SPAPR_MACHINE_NAMED(2_5, ubuntu_xenial, "xenial", false);
+DEFINE_SPAPR_MACHINE_NAMED(2_6, ubuntu_yakkety, "yakkety", false);
+DEFINE_SPAPR_MACHINE_NAMED(2_8, ubuntu_zesty, "zesty", false);
+DEFINE_SPAPR_MACHINE_NAMED(2_10, ubuntu_artful, "artful", true);
 
 static void spapr_machine_register_types(void)
 {
