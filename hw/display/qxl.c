@@ -20,7 +20,7 @@
 
 #include "qemu/osdep.h"
 #include <zlib.h>
-
+#include <glview/glview.h>
 #include "qemu-common.h"
 #include "qemu/timer.h"
 #include "qemu/queue.h"
@@ -326,7 +326,10 @@ static ram_addr_t qxl_rom_size(void)
 
 static void init_qxl_rom(PCIQXLDevice *d)
 {
-    QXLRom *rom = memory_region_get_ram_ptr(&d->rom_bar);
+
+    
+	glview_init();
+	QXLRom *rom = memory_region_get_ram_ptr(&d->rom_bar);
     QXLModes *modes = (QXLModes *)(rom + 1);
     uint32_t ram_header_size;
     uint32_t surface0_area_size;
@@ -400,6 +403,7 @@ static void init_qxl_ram(PCIQXLDevice *d)
 {
     uint8_t *buf;
     uint64_t *item;
+	
 
     buf = d->vga.vram_ptr;
     d->ram = (QXLRam *)(buf + le32_to_cpu(d->shadow_rom.ram_header_offset));
@@ -1963,10 +1967,110 @@ static void qxl_vm_change_state_handler(void *opaque, int running,
 
 /* display change listener */
 
+
+/*
+
+int write_bmp(const char *filename, int width, int height, char *rgb)
+{
+    //testcall();
+    int i, j;
+    int bytesPerLine;
+    unsigned char *line;
+
+    FILE *file;
+    struct BMPHeader bmph;
+
+
+    bytesPerLine = (3 * (width) / 3) * 3;
+	bmph.bfType[0] = 'B';
+	bmph.bfType[1] = 'M';
+
+    bmph.bfOffBits = 54;
+    bmph.bfSize = bmph.bfOffBits + bytesPerLine * height;
+    bmph.bfReserved = 0;
+    bmph.biSize = 40;
+    bmph.biWidth = width;
+    bmph.biHeight = height;
+    bmph.biPlanes = 1;
+    bmph.biBitCount = 24;
+    bmph.biCompression = 0;
+    bmph.biSizeImage = bytesPerLine * height;
+    bmph.biXPelsPerMeter = 0;
+    bmph.biYPelsPerMeter = 0;
+    bmph.biClrUsed = 0;       
+    bmph.biClrImportant = 0; 
+
+    file = fopen (filename, "wb");
+	printf("file name %s saved. width=%d height=%d\n",filename, width,height);
+    if (file == NULL) return(0);
+  
+    fwrite(&bmph.bfType, 2, 1, file);
+    fwrite(&bmph.bfSize, 4, 1, file);
+    fwrite(&bmph.bfReserved, 4, 1, file);
+    fwrite(&bmph.bfOffBits, 4, 1, file);
+    fwrite(&bmph.biSize, 4, 1, file);
+    fwrite(&bmph.biWidth, 4, 1, file);
+    fwrite(&bmph.biHeight, 4, 1, file);
+    fwrite(&bmph.biPlanes, 2, 1, file);
+    fwrite(&bmph.biBitCount, 2, 1, file);
+    fwrite(&bmph.biCompression, 4, 1, file);
+    fwrite(&bmph.biSizeImage, 4, 1, file);
+    fwrite(&bmph.biXPelsPerMeter, 4, 1, file);
+    fwrite(&bmph.biYPelsPerMeter, 4, 1, file);
+    fwrite(&bmph.biClrUsed, 4, 1, file);
+    fwrite(&bmph.biClrImportant, 4, 1, file);
+  
+    line = malloc(bytesPerLine);
+    if (line == NULL)
+    {
+        fprintf(stderr, "Can't allocate memory for BMP file.\n");
+        
+		return(0);
+    }
+
+    for (i = 0; i < height; i++)
+    {
+        for (j = 0; j <= width; j+=1)
+        {
+			int pos = 4 * (width * i + j);
+			line[3*j] = rgb[pos];
+            line[3*j+1] = rgb[pos+1];
+            line[3*j+2] = rgb[pos+2]; 
+		}
+        fwrite(line, bytesPerLine, 1, file);
+    }
+
+    free(line);
+    fclose(file);
+
+    return(1);
+}
+
+
+
+
+*/
+
+
+
+
+
+static int display_update_count = 0;
+
+
 static void display_update(DisplayChangeListener *dcl,
                            int x, int y, int w, int h)
 {
-    PCIQXLDevice *qxl = container_of(dcl, PCIQXLDevice, ssd.dcl);
+
+	PCIQXLDevice *qxl = container_of(dcl, PCIQXLDevice, ssd.dcl);
+
+	display_update_count++;
+    
+
+
+	drawframe_array(1920, 1080, qxl->vga.vram_ptr);
+	glfw_update();
+	
 
     if (qxl->mode == QXL_MODE_VGA) {
         qemu_spice_display_update(&qxl->ssd, x, y, w, h);

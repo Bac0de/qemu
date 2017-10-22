@@ -153,6 +153,8 @@
 #define VGA_GFX_COMPARE_MASK    0x07
 #define VGA_GFX_BIT_MASK        0x08
 
+
+
 /* VGA graphics controller bit masks */
 #define VGA_GR06_GRAPHICS_MODE  0x01
 

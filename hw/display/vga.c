@@ -1,3 +1,5 @@
+
+
 /*
  * QEMU VGA Emulator.
  *
@@ -1457,11 +1459,25 @@ void vga_dirty_log_stop(VGACommonState *s)
     memory_region_set_log(&s->vram, false, DIRTY_MEMORY_VGA);
 }
 
+static int vga_draw_graphic_count = 0;
+
+
+
+
+
 /*
  * graphic modes
  */
 static void vga_draw_graphic(VGACommonState *s, int full_update)
 {
+
+	vga_draw_graphic_count++;
+
+	if((vga_draw_graphic_count % 100) == 0)
+	{
+	}
+
+
     DisplaySurface *surface = qemu_console_surface(s->con);
     int y1, y, update, linesize, y_start, double_scan, mask, depth;
     int width, height, shift_control, line_offset, bwidth, bits;
@@ -2138,6 +2154,13 @@ static inline uint32_t uint_clamp(uint32_t val, uint32_t vmin, uint32_t vmax)
 
 void vga_common_init(VGACommonState *s, Object *obj, bool global_vmstate)
 {
+
+
+	
+
+
+
+
     int i, j, v, b;
 
     for(i = 0;i < 256; i++) {
