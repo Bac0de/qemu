@@ -23,12 +23,14 @@ void frame_texture_init()
                    GL_NEAREST);
  	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
                    GL_NEAREST);
+
 	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1920, 1080, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 }
 
 void drawframe_array(int width, int height, unsigned char* array)
 {
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, array);
+	glTexSubImage2D(GL_TEXTURE_2D, 0,0, 0, width , height, GL_BGRA, GL_UNSIGNED_BYTE, array);
 
 	glBindTexture(GL_TEXTURE_2D, frame_texture);
 
@@ -83,7 +85,7 @@ int glview_init(void)
     if (!glfwInit())
         exit(EXIT_FAILURE);
     
-	window = glfwCreateWindow(1920, 1080, "FB array test", NULL, NULL);
+	window = glfwCreateWindow(1920, 1080, "FB array test", glfwGetPrimaryMonitor() , NULL);
     
 	if (!window)
     {
