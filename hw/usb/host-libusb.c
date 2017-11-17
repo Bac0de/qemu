@@ -81,7 +81,6 @@ struct USBHostDevice {
     uint32_t                         iso_urb_frames;
     uint32_t                         options;
     uint32_t                         loglevel;
-    bool                             needs_autoscan;
 
     /* state */
     QTAILQ_ENTRY(USBHostDevice)      next;
@@ -983,32 +982,9 @@ static void usb_host_exit_notifier(struct Notifier *n, void *data)
     }
 }
 
-static libusb_device *usb_host_find_ref(int bus, int addr)
-{
-    libusb_device **devs = NULL;
-    libusb_device *ret = NULL;
-    int i, n;
-
-    if (usb_host_init() != 0) {
-        return NULL;
-    }
-    n = libusb_get_device_list(ctx, &devs);
-    for (i = 0; i < n; i++) {
-        if (libusb_get_bus_number(devs[i]) == bus &&
-            libusb_get_device_address(devs[i]) == addr) {
-            ret = libusb_ref_device(devs[i]);
-            break;
-        }
-    }
-    libusb_free_device_list(devs, 1);
-    return ret;
-}
-
 static void usb_host_realize(USBDevice *udev, Error **errp)
 {
     USBHostDevice *s = USB_HOST_DEVICE(udev);
-    libusb_device *ldev;
-    int rc;
 
     if (s->match.vendor_id > 0xffff) {
         error_setg(errp, "vendorid out of range");
@@ -1029,33 +1005,11 @@ static void usb_host_realize(USBDevice *udev, Error **errp)
     QTAILQ_INIT(&s->requests);
     QTAILQ_INIT(&s->isorings);
 
-    if (s->match.addr && s->match.bus_num &&
-        !s->match.vendor_id &&
-        !s->match.product_id &&
-        !s->match.port) {
-        s->needs_autoscan = false;
-        ldev = usb_host_find_ref(s->match.bus_num,
-                                 s->match.addr);
-        if (!ldev) {
-            error_setg(errp, "failed to find host usb device %d:%d",
-                       s->match.bus_num, s->match.addr);
-            return;
-        }
-        rc = usb_host_open(s, ldev);
-        libusb_unref_device(ldev);
-        if (rc < 0) {
-            error_setg(errp, "failed to open host usb device %d:%d",
-                       s->match.bus_num, s->match.addr);
-            return;
-        }
-    } else {
-        s->needs_autoscan = true;
-        QTAILQ_INSERT_TAIL(&hostdevs, s, next);
-        usb_host_auto_check(NULL);
-    }
-
     s->exit.notify = usb_host_exit_notifier;
     qemu_add_exit_notifier(&s->exit);
+
+    QTAILQ_INSERT_TAIL(&hostdevs, s, next);
+    usb_host_auto_check(NULL);
 }
 
 static void usb_host_instance_init(Object *obj)
@@ -1073,9 +1027,7 @@ static void usb_host_unrealize(USBDevice *udev, Error **errp)
     USBHostDevice *s = USB_HOST_DEVICE(udev);
 
     qemu_remove_exit_notifier(&s->exit);
-    if (s->needs_autoscan) {
-        QTAILQ_REMOVE(&hostdevs, s, next);
-    }
+    QTAILQ_REMOVE(&hostdevs, s, next);
     usb_host_close(s);
 }
 
