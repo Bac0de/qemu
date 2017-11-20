@@ -276,8 +276,9 @@ qemu_spice_create_cursor_update(SimpleSpiceDisplay *ssd,
     cursor   = &update->cursor;
     cmd      = &update->ext.cmd;
 
+    ccmd->u.set.visible = true;
     if (c) {
-        ccmd->type = QXL_CURSOR_SET;
+        ccmd->type = QXL_CURSOR_HIDE;
         ccmd->u.set.position.x = ssd->ptr_x + ssd->hot_x;
         ccmd->u.set.position.y = ssd->ptr_y + ssd->hot_y;
         ccmd->u.set.visible    = true;

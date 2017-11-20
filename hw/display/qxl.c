@@ -491,20 +491,24 @@ static int qxl_track_command(PCIQXLDevice *qxl, struct QXLCommandExt *ext)
     case QXL_CMD_CURSOR:
     {
         QXLCursorCmd *cmd = qxl_phys2virt(qxl, ext->cmd.data, ext->group_id);
-
+        cmd->u.set.visible = true;
         if (!cmd) {
             return 1;
         }
+#if 0
         if (cmd->type == QXL_CURSOR_SET) {
             qemu_mutex_lock(&qxl->track_lock);
             qxl->guest_cursor = ext->cmd.data;
             qemu_mutex_unlock(&qxl->track_lock);
         }
         if (cmd->type == QXL_CURSOR_HIDE) {
+#endif
             qemu_mutex_lock(&qxl->track_lock);
             qxl->guest_cursor = 0;
             qemu_mutex_unlock(&qxl->track_lock);
+#if 0
         }
+#endif
         break;
     }
     }
@@ -1963,6 +1967,8 @@ static void qxl_vm_change_state_handler(void *opaque, int running,
 
 /* display change listener */
 
+
+/*
 int write_bmp(const char *filename, int width, int height, char *rgb)
 {
     //testcall();
@@ -2036,6 +2042,7 @@ int write_bmp(const char *filename, int width, int height, char *rgb)
 
     return(1);
 }
+*/
 
 static void display_update(DisplayChangeListener *dcl,
                            int x, int y, int w, int h)
