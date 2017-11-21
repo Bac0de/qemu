@@ -191,7 +191,7 @@ static void text_console_update_cursor(void *opaque);
 
 static void gui_update(void *opaque)
 {
-    uint64_t interval = GUI_REFRESH_INTERVAL_IDLE;
+    uint64_t interval = 10;
     uint64_t dcl_interval;
     DisplayState *ds = opaque;
     DisplayChangeListener *dcl;
