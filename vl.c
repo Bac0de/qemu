@@ -27,6 +27,8 @@
 #include "qemu/help_option.h"
 #include "qemu/uuid.h"
 
+#define CONFIG_GLD 1
+
 #ifdef CONFIG_SECCOMP
 #include "sysemu/seccomp.h"
 #endif
@@ -47,6 +49,10 @@ int main(int argc, char **argv)
 #define main qemu_main
 #endif
 #endif /* CONFIG_SDL */
+
+#ifdef CONFIG_GLD
+#include "ui/gld.h"
+#endif
 
 #ifdef CONFIG_COCOA
 #undef main
@@ -2075,6 +2081,7 @@ typedef enum DisplayType {
     DT_COCOA,
     DT_GTK,
     DT_EGL,
+    DT_GLD,
     DT_NONE,
 } DisplayType;
 
@@ -4384,6 +4391,8 @@ int main(int argc, char **argv, char **envp)
         display_type = DT_COCOA;
 #elif defined(CONFIG_VNC)
         vnc_parse("localhost:0,to=99,id=default", &error_abort);
+#elif defined(CONFIG_GLD)
+        display_type = DT_GLD;
 #else
         display_type = DT_NONE;
 #endif
@@ -4729,17 +4738,11 @@ int main(int argc, char **argv, char **envp)
     /* init local displays */
     switch (display_type) {
     case DT_CURSES:
-        curses_display_init(ds, full_screen);
-        break;
+    case DT_GLD:
     case DT_SDL:
-        sdl_display_init(ds, full_screen, no_frame);
-        break;
     case DT_COCOA:
-        cocoa_display_init(ds, full_screen);
-        break;
     case DT_GTK:
-        gtk_display_init(ds, full_screen, grab_on_hover);
-        break;
+        gl_display_init(ds, full_screen);
     default:
         break;
     }

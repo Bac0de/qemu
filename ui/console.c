@@ -189,6 +189,8 @@ static DisplayState *get_alloc_displaystate(void);
 static void text_console_update_cursor_timer(void);
 static void text_console_update_cursor(void *opaque);
 
+static void* vram_ptr;
+
 static void gui_update(void *opaque)
 {
     uint64_t interval = 10;
@@ -1880,6 +1882,16 @@ QemuConsole *qemu_console_lookup_by_device_name(const char *device_id,
     }
 
     return con;
+}
+
+void* get_vram_ptr(void)
+{
+    return vram_ptr;
+}
+
+void set_vram_ptr(void* _ptr)
+{
+    vram_ptr = _ptr;
 }
 
 bool qemu_console_is_visible(QemuConsole *con)

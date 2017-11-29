@@ -33,6 +33,7 @@
 #include "qemu/timer.h"
 #include "hw/xen/xen.h"
 #include "trace.h"
+#include "ui/gld.h"
 
 //#define DEBUG_VGA_MEM
 //#define DEBUG_VGA_REG
@@ -1479,6 +1480,8 @@ static void vga_draw_graphic(VGACommonState *s, int full_update)
     bool byteswap = s->big_endian_fb;
 #endif
 
+    gld_draw();
+
     full_update |= update_basic_params(s);
 
     s->get_resolution(s, &width, &height);
@@ -2193,6 +2196,9 @@ void vga_common_init(VGACommonState *s, Object *obj, bool global_vmstate)
         s->update_retrace_info = vga_precise_update_retrace_info;
         break;
     }
+
+    printf("vram = %p\n", s->vram_ptr);
+    set_vram_ptr(s->vram_ptr);
 
     /*
      * Set default fb endian based on target, could probably be turned

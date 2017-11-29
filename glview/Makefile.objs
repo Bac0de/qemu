@@ -1,0 +1,3 @@
+common-obj-y += glview.o
+
+glview.o-libs = -lglfw -lGL

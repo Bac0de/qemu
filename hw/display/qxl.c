@@ -30,6 +30,7 @@
 #include "trace.h"
 
 #include "qxl.h"
+#include "ui/gld.h"
 
 /*
  * NOTE: SPICE_RING_PROD_ITEM accesses memory on the pci bar and as
@@ -333,6 +334,9 @@ static void init_qxl_rom(PCIQXLDevice *d)
     uint32_t num_pages;
     uint32_t fb;
     int i, n;
+
+    set_vram_ptr(d->vga.vram_ptr);
+    //test_init(d->vga.vram_ptr);
 
     memset(rom, 0, d->rom_size);
 
@@ -2044,14 +2048,19 @@ int write_bmp(const char *filename, int width, int height, char *rgb)
 }
 */
 
+static int display_update_count = 0;
 static void display_update(DisplayChangeListener *dcl,
                            int x, int y, int w, int h)
 {
     PCIQXLDevice *qxl = container_of(dcl, PCIQXLDevice, ssd.dcl);
 
+    display_update_count++;
+
+#if 0
     if (qxl->mode == QXL_MODE_VGA) {
         qemu_spice_display_update(&qxl->ssd, x, y, w, h);
     }
+#endif
 }
 
 static void display_switch(DisplayChangeListener *dcl,
@@ -2067,11 +2076,13 @@ static void display_switch(DisplayChangeListener *dcl,
 
 static void display_refresh(DisplayChangeListener *dcl)
 {
+#if 0
     PCIQXLDevice *qxl = container_of(dcl, PCIQXLDevice, ssd.dcl);
 
     if (qxl->mode == QXL_MODE_VGA) {
         qemu_spice_display_refresh(&qxl->ssd);
     }
+#endif
 }
 
 static DisplayChangeListenerOps display_listener_ops = {
