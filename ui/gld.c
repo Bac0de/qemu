@@ -100,6 +100,13 @@ static void frame_texture_init(void)
 
 static void gld_create_window(void)
 {
+    // Setup monitor for Full-screen OpenGL
+    char* mon_char = getenv("QEMU_MONITOR");
+    int mon = 0;
+
+    if (mon_char)
+        sscanf(mon_char, "%d", &mon);
+
     putenv("DISPLAY=:0");
     putenv("XAUTHORITY=/home/batu/.Xauthority");
     fprintf(stderr, "DISPLAY=%s\n", getenv("DISPLAY"));
@@ -112,14 +119,14 @@ static void gld_create_window(void)
     int count = 0;
     GLFWmonitor **monitors = glfwGetMonitors(&count);
 
-    window = glfwCreateWindow(1920, 1080, "GLD", monitors[0], NULL);
+    window = glfwCreateWindow(1920, 1080, "GLD", monitors[mon], NULL);
     glfwWindowHint(GLFW_DECORATED, 0);
     if (!window) {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
 
-    const GLFWvidmode *mode = glfwGetVideoMode(monitors[0]);
+    const GLFWvidmode *mode = glfwGetVideoMode(monitors[mon]);
     display_refresh_rate = mode->refreshRate;
 
     printf("r %d \n", display_refresh_rate);
